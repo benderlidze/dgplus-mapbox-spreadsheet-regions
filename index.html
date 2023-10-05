@@ -72,7 +72,7 @@
         const bordersCheckbox = document.getElementById('borders');
         const slider = document.getElementById('slider');
         const sliderValue = document.getElementById('slider-value');
-        const layerName = 'electric-retail-service-terri-0nv0yj'
+        const layerName = 'electric-retail-service-territories'
 
         const fullscreen = document.getElementById('fullscreen');
         const mainData = {
@@ -84,7 +84,7 @@
         const map = new mapboxgl.Map({
             container: 'map', // container ID
             // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
-            style: 'mapbox://styles/dgplusdesign/cle3z3cqz000m01kbnbx79dyj', // style URL
+            style: 'mapbox://styles/dgplusdesign/clndfduov03va01r7ayp5d9kl', // style URL
             center: { lng: -99.48299257741193, lat: 40.92230044374887 },
             zoom: 4.5,// starting zoom,
             projection: "mercator"
@@ -124,7 +124,7 @@
                     "transparent"
                 ])
 
-                map.setPaintProperty(layerName, "fill-opacity", 0.7)
+                map.setPaintProperty(layerName, "fill-opacity", 0.6)
                 map.setPaintProperty(layerName, "fill-outline-color", "white")
                 //map.setPaintProperty(layerName, "fill-outline-color", "transparent")
             })
