@@ -38,24 +38,19 @@
 
     <div id="mapcontainer">
         <div id="map"></div>
-        <div class="map-overlay top">
+        <div class="map-overlay">
             <div class="map-overlay-inner">
-                <h3>Title ?</h3>
+                <h3>Legend</h3>
                 <!-- <h4>cents/kWh</h4> -->
                 <div id="legend" class="legend-container">
                     <div class="legend-item">
-                        <div class="legend-square" style="background-color: #0048A8"></div>
-                        <div class="legend-text">Yes</div>
-                    </div>
-                    <div class="legend-item">
                         <div class="legend-square" style="background-color: #065ED4"></div>
-                        <div class="legend-text">2024</div>
+                        <div class="legend-text">Full Coverage</div>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-square" style="background-color: #F8F8F8"></div>
-                        <div class="legend-text">No</div>
+                        <div class="legend-square" style="background-color: #1D8BE4"></div>
+                        <div class="legend-text">Coming Soon</div>
                     </div>
-
                 </div>
                 <div id="filters"></div>
                 <label>Borders: <input id="borders" type="checkbox" checked></label>
@@ -78,7 +73,8 @@
         const fullscreen = document.getElementById('fullscreen');
         const mainData = {
             sprData: [],
-            filters: new Set()
+            filters: new Set(),
+            borderFilters: []
         }
 
         mapboxgl.accessToken = 'pk.eyJ1IjoiZGdwbHVzZGVzaWduIiwiYSI6ImNsMGhndHJvdjA4aWozZW1xb21tY3VuZGoifQ.R8LGSPakcmmq-FVmRp7_1A';
@@ -106,13 +102,14 @@
                         let color = 'transparent';
                         switch (value) {
                             case 'yes':
-                                color = '#0048A8';
+                                console.log('', d.Entity.toUpperCase(), d['Utility Coverage']);
+                                color = '#065ED4';
                                 break;
                             case 'no':
-                                color = '#F8F8F8';
+                                color = 'transparent';
                                 break;
                             case '2024':
-                                color = '#065ED4';
+                                color = '#1D8BE4';
                                 break;
                         }
                         return [['==', ['get', "NAME"], d.Entity.toUpperCase()], color]
@@ -125,9 +122,12 @@
                     "transparent"
                 ])
 
-                map.setPaintProperty(layerName, "fill-opacity", 0.7)
-                map.setPaintProperty(layerName, "fill-outline-color", "white")
+                setBorders("white")
+
+                map.setPaintProperty(layerName, "fill-opacity", 1)
+                //map.setPaintProperty(layerName, "fill-outline-color", "white")
                 //map.setPaintProperty(layerName, "fill-outline-color", "transparent")
+
 
                 //set layers order 1st YES 
                 const YES = mainData.sprData
@@ -141,10 +141,11 @@
                     0  // Default sort key value for "no"
                 ])
 
+                //add legend
+
             })
 
             //A, D, E, J, P, and Q
-
             const displayItemsNames = [
                 'Entity',
                 'Ownership',
@@ -165,9 +166,23 @@
                 const uniqueNames = [...new Set(names)]
                 console.log('uniqueNames', uniqueNames);
 
+                const sprNames = mainData.sprData.map(d => d.Entity.toUpperCase())
+                const includes = sprNames.filter(name => uniqueNames.includes(name))
+                console.log('includes', includes);
+
+
+
+                if (includes.length === 0) return;
 
                 const descr = uniqueNames
                     .filter(name => name)
+                    .filter(name => {
+                        const res = mainData.sprData
+                            .filter(spr => spr.Entity && spr.Entity !== "")
+                            .find(spr => clear(spr.Entity) === clear(name))
+                        console.log('res', res);
+                        return res && res['Utility Coverage'].toLowerCase() !== 'no'
+                    })
                     .map(name => {
 
                         const res = mainData.sprData
@@ -185,15 +200,11 @@
                         </div>
                             `
                             : ``
-                        //     `
-                        // <div class="popup-main">
-                        //     <div><b>${name}</b></div>
-                        //     <div>NO DATA</div>
-                        // </div>
-                        // `
-
                         return text
-                    }).join("")
+                    })
+
+                console.log('descr', descr);
+                if (descr.length === 0) return;
 
                 // Copy coordinates array.
                 new mapboxgl.Popup()
@@ -214,8 +225,34 @@
 
             bordersCheckbox.addEventListener('input', (e) => {
                 const val = bordersCheckbox.checked ? "white" : "transparent"
-                map.setPaintProperty(layerName, "fill-outline-color", val)
+                //map.setPaintProperty(layerName, "fill-outline-color", val)
+                setBorders(val)
             })
+
+            function setBorders(val) {
+                const borderFilters = mainData.sprData
+                    .map(d => {
+                        const value = d['Utility Coverage'].toLowerCase().trim();
+                        let color = 'transparent';
+                        switch (value) {
+                            case 'yes':
+                                color = val;
+                                break;
+                            case 'no':
+                                color = 'transparent';
+                                break;
+                            case '2024':
+                                color = val;
+                                break;
+                        }
+                        return [['==', ['get', "NAME"], d.Entity.toUpperCase()], color]
+                    })
+                map.setPaintProperty(layerName, "fill-outline-color", [
+                    'case',
+                    ...borderFilters.flat(),
+                    "transparent"
+                ])
+            }
 
         });
 
